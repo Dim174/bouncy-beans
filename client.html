@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bouncy Beans Soft Play – Rental Agreement</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --pink: #FF6B8A; --yellow: #FFD166; --mint: #06D6A0;
+    --sky: #118AB2; --navy: #1A1A2E; --soft-white: #FFF9F0;
+    --text: #2D2D2D; --muted: #7A7A8C; --border: #EDE8F5; --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--soft-white); color: var(--text); min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, var(--pink) 0%, #FF8FA3 40%, var(--yellow) 100%);
+    padding: 24px 32px 20px; text-align: center; position: relative; overflow: hidden;
+  }
+  .header::before { content:''; position:absolute; width:200px; height:200px; background:rgba(255,255,255,0.12); border-radius:50%; top:-80px; right:-40px; }
+  .header-logo { font-family:'Fredoka One',cursive; font-size:2rem; color:#fff; position:relative; z-index:1; }
+  .header-logo span { color: var(--navy); }
+  .header-sub { font-size:0.88rem; color:rgba(255,255,255,0.92); font-weight:600; margin-top:4px; position:relative; z-index:1; }
+
+  .main { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
+  .card { background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:22px; margin-bottom:18px; border:1px solid var(--border); }
+  .card-title { font-family:'Fredoka One',cursive; font-size:1.2rem; color:var(--sky); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+
+  label { font-size:0.83rem; font-weight:700; color:var(--muted); display:block; margin-bottom:5px; }
+  input, textarea {
+    width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px;
+    font-family:'Nunito',sans-serif; font-size:0.93rem; color:var(--text);
+    background:var(--soft-white); transition:border-color 0.2s; outline:none;
+  }
+  input:focus, textarea:focus { border-color:var(--pink); background:#fff; }
+  .field { margin-bottom:14px; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media(max-width:480px){ .field-row { grid-template-columns:1fr; } }
+
+  /* agreement doc */
+  .agreement-doc { font-size:0.88rem; line-height:1.75; }
+  .agreement-doc h2 { font-family:'Fredoka One',cursive; color:var(--pink); font-size:1.5rem; text-align:center; margin-bottom:4px; }
+  .agreement-doc .doc-sub { text-align:center; color:var(--muted); font-size:0.8rem; margin-bottom:20px; }
+  .agreement-doc h3 { font-size:0.82rem; font-weight:800; color:var(--sky); text-transform:uppercase; letter-spacing:0.8px; margin:18px 0 7px; }
+  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px 14px; background:#F8F5FF; border-radius:10px; padding:12px; margin-bottom:4px; }
+  .info-item { font-size:0.85rem; }
+  .info-item strong { color:var(--navy); }
+  .items-table { width:100%; border-collapse:collapse; margin:8px 0; font-size:0.84rem; }
+  .items-table th { background:var(--navy); color:#fff; padding:8px 10px; text-align:left; font-size:0.78rem; }
+  .items-table td { padding:8px 10px; border-bottom:1px solid var(--border); }
+  .items-table tr:nth-child(even) td { background:#F8F5FF; }
+  .total-row td { font-weight:800; color:var(--pink); border-top:2px solid var(--navy); }
+  .terms-text p { margin-top:5px; font-size:0.82rem; color:#444; }
+  .notice-box { background:#FFF8E6; border-left:4px solid var(--yellow); border-radius:8px; padding:10px 14px; font-size:0.83rem; margin:12px 0; }
+
+  /* signature canvas */
+  .sig-canvas-wrap {
+    border:2px solid var(--border); border-radius:12px; background:#fff;
+    position:relative; overflow:hidden; touch-action:none;
+  }
+  .sig-canvas-wrap canvas { display:block; width:100%; height:160px; cursor:crosshair; }
+  .sig-canvas-label {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    color:#ccc; font-size:0.85rem; font-weight:700; pointer-events:none;
+    transition:opacity 0.3s;
+  }
+  .sig-clear-btn {
+    margin-top:6px; padding:6px 14px; border-radius:8px; border:none;
+    background:#FFE5EA; color:var(--pink); font-family:'Nunito',sans-serif;
+    font-weight:700; font-size:0.82rem; cursor:pointer;
+  }
+  .sig-clear-btn:hover { background:var(--pink); color:#fff; }
+
+  /* checkbox */
+  .checkbox-row { display:flex; align-items:flex-start; gap:12px; margin:14px 0; }
+  .checkbox-row input[type=checkbox] { width:20px; height:20px; flex-shrink:0; margin-top:2px; accent-color:var(--pink); cursor:pointer; }
+  .checkbox-row label { font-size:0.88rem; font-weight:600; color:var(--text); cursor:pointer; }
+
+  /* submit button */
+  .btn-submit {
+    width:100%; padding:16px; background:linear-gradient(135deg,var(--pink),#FF8FA3);
+    color:#fff; border:none; border-radius:14px; font-family:'Nunito',sans-serif;
+    font-weight:800; font-size:1.05rem; cursor:pointer;
+    box-shadow:0 4px 18px rgba(255,107,138,0.38); transition:all 0.18s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-submit:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(255,107,138,0.45); }
+  .btn-submit:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+  /* success screen */
+  .success-screen {
+    display:none; text-align:center; padding:40px 20px;
+    background:#fff; border-radius:var(--radius); box-shadow:var(--shadow);
+  }
+  .success-screen .big-emoji { font-size:4rem; margin-bottom:16px; }
+  .success-screen h2 { font-family:'Fredoka One',cursive; color:var(--mint); font-size:1.8rem; margin-bottom:8px; }
+  .success-screen p { color:var(--muted); font-size:0.95rem; max-width:380px; margin:0 auto; }
+
+  /* loading spinner */
+  .spinner { display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .error-msg { background:#FFE5EA; border-radius:8px; padding:10px 14px; color:#C0392B; font-size:0.85rem; font-weight:700; margin-top:10px; display:none; }
+
+  @media print {
+    .client-form, .sig-section, .btn-submit, .header { display:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🎈 Bouncy Beans <span>Soft Play</span></div>
+  <div class="header-sub">Please review your rental agreement and sign below</div>
+</div>
+
+<div class="main">
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="success-screen">
+    <div class="big-emoji">🎉</div>
+    <h2>Agreement Signed!</h2>
+    <p>Thank you! A copy of your signed agreement has been sent to your email and to Bouncy Beans Soft Play. We can't wait to see you!</p>
+    <p style="margin-top:16px; font-size:0.82rem;">🎈 If you don't see the email, please check your spam folder.</p>
+  </div>
+
+  <!-- MAIN FORM (hidden once signed) -->
+  <div id="main-content">
+
+    <!-- ORDER SUMMARY -->
+    <div class="card">
+      <div class="card-title">📋 Your Rental Summary</div>
+      <div id="order-summary">
+        <div style="color:var(--muted); font-size:0.9rem; text-align:center; padding:12px;">Loading your order...</div>
+      </div>
+    </div>
+
+    <!-- FULL AGREEMENT -->
+    <div class="card">
+      <div class="card-title">📄 Please Read Your Agreement</div>
+      <div style="background:#FFF8E6; border-left:4px solid var(--yellow); border-radius:8px; padding:10px 14px; font-size:0.83rem; font-weight:700; color:#7A5C00; margin-bottom:16px;">
+        ⚠️ Please read the full agreement carefully before signing below.
+      </div>
+      <div class="agreement-doc" id="agreement-display"></div>
+    </div>
+
+    <!-- CLIENT FORM -->
+    <div class="card client-form">
+      <div class="card-title">👤 Your Contact Information</div>
+      <div class="field-row">
+        <div class="field">
+          <label>First Name *</label>
+          <input type="text" id="c-first" placeholder="Jane">
+        </div>
+        <div class="field">
+          <label>Last Name *</label>
+          <input type="text" id="c-last" placeholder="Smith">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email Address * (your copy will be sent here)</label>
+        <input type="email" id="c-email" placeholder="jane@email.com">
+      </div>
+      <div class="field">
+        <label>Phone Number *</label>
+        <input type="tel" id="c-phone" placeholder="+1 (555) 000-0000">
+      </div>
+    </div>
+
+    <!-- EVENT DETAILS (filled by client) -->
+    <div class="card client-form">
+      <div class="card-title">📍 Event Location & Timing</div>
+      <div class="field">
+        <label>Venue / Location Name *</label>
+        <input type="text" id="c-venue" placeholder="e.g. Community Hall, My Home, St. Mary's Church">
+      </div>
+      <div class="field">
+        <label>Venue Address *</label>
+        <input type="text" id="c-venue-address" placeholder="123 Main St, City, Province, Postal Code">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Setup Time *</label>
+          <input type="time" id="c-setup-time">
+        </div>
+        <div class="field">
+          <label>Rental Duration *</label>
+          <select id="c-duration" style="width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-family:'Nunito',sans-serif; font-size:0.93rem; color:var(--text); background:var(--soft-white); outline:none;">
+            <option value="">— Select —</option>
+            <option>1 Hour</option>
+            <option>2 Hours</option>
+            <option>3 Hours</option>
+            <option>4 Hours</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Special Notes / Instructions</label>
+        <textarea id="c-notes" rows="3" placeholder="Any special requests, access notes, etc."></textarea>
+      </div>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="card sig-section">
+      <div class="card-title">✍️ Your Signature</div>
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:12px;">Sign below using your finger or mouse. By signing you confirm you have read and agree to all terms.</p>
+      <div class="sig-canvas-wrap">
+        <canvas id="sig-canvas"></canvas>
+        <div class="sig-canvas-label" id="sig-label">Sign here</div>
+      </div>
+      <button class="sig-clear-btn" onclick="clearSig()">✕ Clear Signature</button>
+    </div>
+
+    <!-- AGREE & SUBMIT -->
+    <div class="card">
+      <div class="checkbox-row">
+        <input type="checkbox" id="agree-check">
+        <label for="agree-check">I have read and fully agree to the Bouncy Beans Soft Play Rental Agreement and all terms and conditions stated above.</label>
+      </div>
+      <div class="error-msg" id="error-msg">⚠️ Please fill all required fields, sign the agreement, and tick the checkbox.</div>
+      <button class="btn-submit" id="submit-btn" onclick="submitAgreement()">
+        ✅ Sign &amp; Submit Agreement
+      </button>
+    </div>
+
+  </div><!-- /main-content -->
+</div>
+
+<script>
+// ── EMAILJS INIT ──────────────────────────────────────────
+emailjs.init('TiWJWCflzGbpUfzeF');
+
+const BUSINESS_EMAIL = 'bouncybeanssoftplay@gmail.com';
+const SERVICE_ID     = 'service_r130idj';
+const TEMPLATE_ID    = 'template_zyzzxac';
+
+// ── LOAD ORDER FROM URL ───────────────────────────────────
+let order = null;
+try {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('order');
+  if (raw) order = JSON.parse(decodeURIComponent(escape(atob(raw))));
+} catch(e) { console.error('Could not parse order', e); }
+
+// ── RENDER ORDER SUMMARY ──────────────────────────────────
+function renderOrder() {
+  if (!order) {
+    document.getElementById('order-summary').innerHTML =
+      '<p style="color:red; font-size:0.9rem;">⚠️ No order data found. Please contact Bouncy Beans Soft Play.</p>';
+    renderAgreement();
+    return;
+  }
+
+  const eventFmt = order.eventDate
+    ? new Date(order.eventDate+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+    : '—';
+
+  let itemsRows = order.products.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td style="text-align:center">${p.qty}</td>
+      <td style="text-align:right">$${parseFloat(p.price).toFixed(2)}</td>
+      <td style="text-align:right">$${(p.qty*p.price).toFixed(2)}</td>
+    </tr>`).join('');
+
+  if (order.delivery > 0) {
+    itemsRows += `<tr>
+      <td>Delivery / Setup Fee${order.deliveryNotes ? ' — '+order.deliveryNotes : ''}</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:right">$${order.delivery.toFixed(2)}</td>
+      <td style="text-align:right">$${order.delivery.toFixed(2)}</td>
+    </tr>`;
+  }
+
+  document.getElementById('order-summary').innerHTML = `
+    <div class="info-grid" style="margin-bottom:14px;">
+      <div class="info-item"><strong>Ref:</strong> ${order.refNum}</div>
+      <div class="info-item"><strong>Event Date:</strong> ${eventFmt}</div>
+      <div class="info-item" style="grid-column:1/-1; color:var(--muted); font-size:0.8rem;">📍 Setup time, duration &amp; venue — please fill in below</div>
+    </div>
+    <table class="items-table">
+      <thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>
+        ${itemsRows}
+        <tr class="total-row">
+          <td colspan="3" style="text-align:right; padding-right:12px;">TOTAL</td>
+          <td style="text-align:right">$${order.total.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="text-align:right; padding-right:12px; color:var(--muted);">Refundable Security Deposit</td>
+          <td style="text-align:right; color:var(--mint); font-weight:700;">$${order.deposit.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="text-align:right; padding-right:12px; font-weight:800;">Balance Due</td>
+          <td style="text-align:right; font-weight:800; color:var(--pink);">$${order.balance.toFixed(2)}</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+
+  renderAgreement();
+}
+
+// ── RENDER FULL AGREEMENT TEXT ────────────────────────────
+function renderAgreement() {
+  const today = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+  const refNum = order ? order.refNum : '—';
+  document.getElementById('agreement-display').innerHTML = `
+    <h2>🎈 Bouncy Beans Soft Play</h2>
+    <div class="doc-sub">Rental Agreement &amp; Terms • Ref: ${refNum} • Issued: ${today}</div>
+    <div style="text-align:center; font-size:0.82rem; color:var(--muted); margin-bottom:18px;">
+      This Rental Agreement ("Agreement") is entered into on this day between:<br>
+      <strong>Bouncy Beans Soft Play Rental ("Lessor")</strong> and the Renter named above.
+    </div>
+
+    <h3>1. Reservation and Deposit</h3>
+    <div class="terms-text">
+      <p>A $150 deposit is required to secure the event date and time. This deposit also serves as a damage deposit and will be refunded to the Renter after the event once the equipment has been inspected and confirmed to be in good condition.</p>
+      <p>The deposit is non-refundable.</p>
+      <p>The remaining rental balance is due no later than the day of the event before setup begins.</p>
+    </div>
+
+    <h3>2. Rental Equipment</h3>
+    <div class="terms-text">
+      <p>The Renter acknowledges receipt of equipment in good condition and agrees to return it in the same condition.</p>
+    </div>
+
+    <h3>3. Bouncy House Safety Rules</h3>
+    <div class="terms-text">
+      <p>• Maximum weight limit: No more than 160 kg (for the small bounce) and 250 kg (for the big bounce) inside the bouncy castle at one time.</p>
+      <p>• No shoes inside the bouncy castle.</p>
+      <p>• No food, drinks, gum, or candy allowed inside the bouncy castle.</p>
+      <p>• No sharp objects, including keys, jewelry, pens, etc.</p>
+      <p>• No coloring materials, including markers, crayons, or face paint, inside or near the castle.</p>
+      <p>• No jumping, climbing, or hanging on the walls of the bouncy castle.</p>
+      <p>• Children must be supervised by a responsible adult at all times.</p>
+      <p>• Equipment must be kept away from water, open flames, or extreme weather.</p>
+    </div>
+
+    <h3>4. Responsibilities of the Renter</h3>
+    <div class="terms-text">
+      <p>• Equipment must be used under adult supervision at all times.</p>
+      <p>• Equipment is intended for indoor use only.</p>
+      <p>• No food, drinks, sharp objects, or shoes are permitted in the play area. Socks must be worn in the play area.</p>
+      <p>• The Renter is responsible for any damage, loss, or excessive dirt to the equipment. Repair or replacement costs may be deducted from the damage deposit.</p>
+    </div>
+
+    <h3>5. No Animals Policy</h3>
+    <div class="terms-text">
+      <p>Absolutely no animals or pets are permitted in or near the soft play area at any time.</p>
+      <p>Animals can contaminate, soil, or damage the equipment (including chewing, scratching, urination, or hair transfer), which compromises safety and sanitation standards.</p>
+      <p>If any animal comes into contact with the equipment, the Company reserves the right to immediately terminate use, remove the equipment without refund, and charge additional fees for cleaning, repairs, or replacement. The Client will be held fully responsible for any resulting damage.</p>
+    </div>
+
+    <h3>6. Liability Waiver</h3>
+    <div class="terms-text">
+      <p>The Renter understands and agrees that Bouncy Beans Soft Play Rental is not responsible for any injuries, accidents, or damages resulting from the use of the rental equipment. The Renter assumes all responsibility for the safety of all children and guests using the equipment during the event.</p>
+      <p>The Renter releases and holds harmless Bouncy Beans Soft Play Rental, its owners, and employees from any claims, damages, or liabilities arising from use or misuse of the rental equipment.</p>
+    </div>
+
+    <h3>7. Setup and Pickup</h3>
+    <div class="terms-text">
+      <p>Setup and takedown will be performed by Bouncy Beans staff.</p>
+      <p>Upon pickup, equipment will be inspected. The $150 deposit will be refunded within 24–48 hours if no damage is found.</p>
+    </div>
+
+    <h3>8. Agreement</h3>
+    <div class="terms-text">
+      <p>By signing below, both parties acknowledge that they have read, understood, and agree to the terms and conditions stated in this Agreement.</p>
+    </div>
+  `;
+}
+
+// ── SIGNATURE CANVAS ──────────────────────────────────────
+const canvas = document.getElementById('sig-canvas');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+let hasSig = false;
+
+function resizeCanvas() {
+  const w = canvas.offsetWidth;
+  canvas.width = w;
+  canvas.height = 160;
+}
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: (src.clientX - r.left) * (canvas.width / r.width), y: (src.clientY - r.top) * (canvas.height / r.height) };
+}
+
+canvas.addEventListener('mousedown', e => { drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+canvas.addEventListener('mousemove', e => { if(!drawing) return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#1A1A2E'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.stroke(); hasSig=true; document.getElementById('sig-label').style.opacity='0'; });
+canvas.addEventListener('mouseup', () => drawing=false);
+canvas.addEventListener('mouseleave', () => drawing=false);
+
+canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }, {passive:false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); if(!drawing) return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#1A1A2E'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.stroke(); hasSig=true; document.getElementById('sig-label').style.opacity='0'; }, {passive:false});
+canvas.addEventListener('touchend', () => drawing=false);
+
+function clearSig() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  hasSig=false;
+  document.getElementById('sig-label').style.opacity='1';
+}
+
+// ── SUBMIT ────────────────────────────────────────────────
+async function submitAgreement() {
+  const first        = document.getElementById('c-first').value.trim();
+  const last         = document.getElementById('c-last').value.trim();
+  const email        = document.getElementById('c-email').value.trim();
+  const phone        = document.getElementById('c-phone').value.trim();
+  const venue        = document.getElementById('c-venue').value.trim();
+  const venueAddress = document.getElementById('c-venue-address').value.trim();
+  const setupTime    = document.getElementById('c-setup-time').value;
+  const duration     = document.getElementById('c-duration').value;
+  const notes        = document.getElementById('c-notes').value.trim();
+  const agreed       = document.getElementById('agree-check').checked;
+  const errBox       = document.getElementById('error-msg');
+
+  if (!first || !last || !email || !phone || !venue || !venueAddress || !setupTime || !duration || !hasSig || !agreed) {
+    errBox.textContent = '⚠️ Please fill all required fields, sign the agreement, and tick the checkbox.';
+    errBox.style.display = 'block';
+    errBox.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  errBox.style.display = 'none';
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Sending...';
+
+  const sigImage = canvas.toDataURL('image/png');
+  const today = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+
+  // Format setup time nicely
+  const [h,m] = setupTime.split(':');
+  const td = new Date(); td.setHours(h,m);
+  const timeFmt = td.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+
+  const itemsList = order.products.map(p =>
+    `${p.name} x${p.qty} — $${(p.qty*p.price).toFixed(2)}`
+  ).join('\n') + (order.delivery > 0 ? `\nDelivery Fee — $${order.delivery.toFixed(2)}` : '');
+
+  const templateParams = {
+    ref_num:        order.refNum,
+    signed_date:    today,
+    event_date:     order.eventDate ? new Date(order.eventDate+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '—',
+    setup_time:     timeFmt,
+    duration:       duration,
+    venue:          venue,
+    venue_address:  venueAddress,
+    client_name:    first + ' ' + last,
+    client_email:   email,
+    client_phone:   phone,
+    client_notes:   notes || 'None',
+    items_list:     itemsList,
+    total:          '$' + order.total.toFixed(2),
+    deposit:        '$' + order.deposit.toFixed(2),
+    balance_due:    '$' + order.balance.toFixed(2),
+    signature_img:  sigImage,
+    business_email: BUSINESS_EMAIL,
+    to_email:       email,
+  };
+
+  try {
+    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  } catch(err) {
+    console.error('EmailJS error:', err);
+    btn.disabled = false;
+    btn.innerHTML = '✅ Sign &amp; Submit Agreement';
+    errBox.textContent = '⚠️ Failed to send. Please try again or contact Bouncy Beans directly.';
+    errBox.style.display = 'block';
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  resizeCanvas();
+  renderOrder();
+});
+window.addEventListener('resize', resizeCanvas);
+</script>
+</body>
+</html>
