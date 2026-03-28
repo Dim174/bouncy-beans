@@ -6,6 +6,7 @@
 <title>Bouncy Beans Soft Play – Rental Agreement</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root {
     --pink: #FF6B8A; --yellow: #FFD166; --mint: #06D6A0;
@@ -123,8 +124,15 @@
   <div class="success-screen" id="success-screen">
     <div class="big-emoji">🎉</div>
     <h2>Agreement Signed!</h2>
-    <p>Thank you! A copy of your signed agreement has been sent to your email and to Bouncy Beans Soft Play. We can't wait to see you!</p>
-    <p style="margin-top:16px; font-size:0.82rem;">🎈 If you don't see the email, please check your spam folder.</p>
+    <p>A copy has been sent to your email and to Bouncy Beans Soft Play. We can't wait to see you!</p>
+    <p style="margin-top:10px; font-size:0.82rem; color:var(--muted);">🎈 If you don't see the email, please check your spam folder.</p>
+    <button id="pdf-download-btn" onclick="downloadPDF()" style="margin-top:24px; padding:14px 28px; background:linear-gradient(135deg,#118AB2,#06D6A0); color:#fff; border:none; border-radius:12px; font-family:'Nunito',sans-serif; font-weight:800; font-size:1rem; cursor:pointer; box-shadow:0 4px 14px rgba(17,138,178,0.3);">
+      ⬇️ Download PDF Copy
+    </button>
+  </div>
+
+  <!-- HIDDEN PDF CONTENT (used for PDF generation only) -->
+  <div id="pdf-content" style="display:none; font-family:Arial,sans-serif; padding:32px; max-width:700px; color:#2D2D2D; font-size:12px; line-height:1.7;">
   </div>
 
   <!-- MAIN FORM (hidden once signed) -->
@@ -407,6 +415,143 @@ function clearSig() {
   document.getElementById('sig-label').style.opacity='1';
 }
 
+// ── PDF GENERATION ────────────────────────────────────────
+let pdfData = null;
+
+function buildPDFContent(data) {
+  const itemsRows = data.products.map(p => `
+    <tr>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee;">${p.name}</td>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:center;">${p.qty}</td>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${parseFloat(p.price).toFixed(2)}</td>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${(p.qty*p.price).toFixed(2)}</td>
+    </tr>`).join('') + (data.order.delivery > 0 ? `
+    <tr>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee;">Delivery / Setup Fee${data.order.deliveryNotes?' — '+data.order.deliveryNotes:''}</td>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:center;">1</td>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${data.order.delivery.toFixed(2)}</td>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${data.order.delivery.toFixed(2)}</td>
+    </tr>` : '');
+
+  document.getElementById('pdf-content').innerHTML = `
+    <div style="text-align:center; margin-bottom:20px; padding-bottom:16px; border-bottom:3px solid #FF6B8A;">
+      <div style="font-size:22px; font-weight:900; color:#FF6B8A;">🎈 Bouncy Beans Soft Play</div>
+      <div style="font-size:13px; font-weight:700; color:#1A1A2E; margin-top:4px;">RENTAL AGREEMENT</div>
+      <div style="font-size:11px; color:#7A7A8C; margin-top:2px;">Ref: ${data.order.refNum} &nbsp;|&nbsp; Signed: ${data.today}</div>
+    </div>
+
+    <table style="width:100%; margin-bottom:16px; background:#F8F5FF; border-radius:8px;">
+      <tr>
+        <td style="padding:8px 12px; width:50%;"><strong>Client Name:</strong> ${data.first} ${data.last}</td>
+        <td style="padding:8px 12px;"><strong>Phone:</strong> ${data.phone}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;"><strong>Email:</strong> ${data.email}</td>
+        <td style="padding:8px 12px;"><strong>Notes:</strong> ${data.notes||'None'}</td>
+      </tr>
+    </table>
+
+    <table style="width:100%; margin-bottom:16px; background:#EEF9FF; border-radius:8px;">
+      <tr>
+        <td style="padding:8px 12px; width:50%;"><strong>Setup Time:</strong> ${data.timeFmt}</td>
+        <td style="padding:8px 12px;"><strong>Duration:</strong> ${data.duration}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;"><strong>Venue:</strong> ${data.venue}</td>
+        <td style="padding:8px 12px;"><strong>Address:</strong> ${data.venueAddress}</td>
+      </tr>
+    </table>
+
+    <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+      <thead>
+        <tr style="background:#1A1A2E; color:#fff;">
+          <th style="padding:8px 10px; text-align:left; font-size:11px;">Item</th>
+          <th style="padding:8px 10px; text-align:center; font-size:11px;">Qty</th>
+          <th style="padding:8px 10px; text-align:right; font-size:11px;">Unit</th>
+          <th style="padding:8px 10px; text-align:right; font-size:11px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsRows}
+        <tr style="font-weight:800; border-top:2px solid #1A1A2E;">
+          <td colspan="3" style="padding:8px 10px; text-align:right; color:#FF6B8A;">TOTAL</td>
+          <td style="padding:8px 10px; text-align:right; color:#FF6B8A;">$${data.order.total.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding:6px 10px; text-align:right; color:#7A7A8C;">Refundable Security Deposit</td>
+          <td style="padding:6px 10px; text-align:right; color:#06D6A0; font-weight:700;">$${data.order.deposit.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding:6px 10px; text-align:right; font-weight:800;">Balance Due</td>
+          <td style="padding:6px 10px; text-align:right; font-weight:800; color:#FF6B8A;">$${data.order.balance.toFixed(2)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="font-size:11px; color:#444; margin-bottom:16px; padding:12px; background:#FFF8E6; border-left:4px solid #FFD166; border-radius:4px;">
+      <strong>Payment:</strong> A refundable security deposit of $150.00 is required to confirm the booking. The remaining balance is due no later than the day of the event before setup begins.
+    </div>
+
+    <div style="font-size:10px; color:#444; line-height:1.6;">
+      <div style="font-weight:800; color:#118AB2; font-size:11px; text-transform:uppercase; margin:10px 0 4px;">1. Reservation and Deposit</div>
+      <p>A $150 deposit is required to secure the event date and time. This deposit also serves as a damage deposit and will be refunded after the event once equipment is inspected and confirmed in good condition. The deposit is non-refundable. The remaining rental balance is due no later than the day of the event before setup begins.</p>
+      <div style="font-weight:800; color:#118AB2; font-size:11px; text-transform:uppercase; margin:10px 0 4px;">2. Rental Equipment</div>
+      <p>The Renter acknowledges receipt of equipment in good condition and agrees to return it in the same condition.</p>
+      <div style="font-weight:800; color:#118AB2; font-size:11px; text-transform:uppercase; margin:10px 0 4px;">3. Bouncy House Safety Rules</div>
+      <p>• Max weight: 160 kg (small bounce) / 250 kg (big bounce) • No shoes • No food, drinks, gum or candy • No sharp objects • No coloring materials or face paint • No jumping/climbing on walls • Adult supervision required at all times • Keep away from water, flames or extreme weather.</p>
+      <div style="font-weight:800; color:#118AB2; font-size:11px; text-transform:uppercase; margin:10px 0 4px;">4. Responsibilities of the Renter</div>
+      <p>• Adult supervision at all times • Indoor use only • No food, drinks, sharp objects or shoes in play area — socks must be worn • Renter is responsible for any damage, loss, or excessive dirt.</p>
+      <div style="font-weight:800; color:#118AB2; font-size:11px; text-transform:uppercase; margin:10px 0 4px;">5. No Animals Policy</div>
+      <p>No animals or pets permitted near the soft play area at any time. Violation may result in immediate removal of equipment without refund and additional cleaning/repair charges.</p>
+      <div style="font-weight:800; color:#118AB2; font-size:11px; text-transform:uppercase; margin:10px 0 4px;">6. Liability Waiver</div>
+      <p>Bouncy Beans Soft Play Rental is not responsible for any injuries, accidents, or damages from use of rental equipment. The Renter assumes full responsibility and releases Bouncy Beans Soft Play Rental, its owners and employees from any claims or liabilities.</p>
+      <div style="font-weight:800; color:#118AB2; font-size:11px; text-transform:uppercase; margin:10px 0 4px;">7. Setup and Pickup</div>
+      <p>Setup and takedown performed by Bouncy Beans staff. Equipment inspected upon pickup. The $150 deposit will be refunded within 24–48 hours if no damage is found.</p>
+    </div>
+
+    <div style="margin-top:24px; display:flex; gap:24px; border-top:2px solid #eee; padding-top:16px;">
+      <div style="flex:1;">
+        <div style="font-size:10px; font-weight:800; color:#7A7A8C; text-transform:uppercase; margin-bottom:8px;">Client Signature</div>
+        <img src="${data.sigImage}" style="max-width:200px; max-height:70px; border-bottom:1px solid #1A1A2E; display:block;">
+        <div style="font-size:10px; margin-top:4px; color:#555;">${data.first} ${data.last} &nbsp;|&nbsp; ${data.today}</div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:10px; font-weight:800; color:#7A7A8C; text-transform:uppercase; margin-bottom:8px;">Bouncy Beans Soft Play</div>
+        <div style="border-bottom:1px solid #1A1A2E; height:70px;"></div>
+        <div style="font-size:10px; margin-top:4px; color:#555;">Authorised Signature</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; font-size:10px; color:#7A7A8C; margin-top:20px; padding-top:10px; border-top:1px solid #eee;">
+      🎈 Bouncy Beans Soft Play &nbsp;|&nbsp; bouncybeanssoftplay@gmail.com &nbsp;|&nbsp; Ref: ${data.order.refNum}
+    </div>
+  `;
+}
+
+function downloadPDF() {
+  const btn = document.getElementById('pdf-download-btn');
+  btn.textContent = '⏳ Generating PDF...';
+  btn.disabled = true;
+
+  const el = document.getElementById('pdf-content');
+  el.style.display = 'block';
+
+  html2pdf().set({
+    margin: [10, 10, 10, 10],
+    filename: `Bouncy-Beans-Agreement-${pdfData.order.refNum}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(el).save().then(() => {
+    el.style.display = 'none';
+    btn.textContent = '✅ Downloaded!';
+    setTimeout(() => {
+      btn.textContent = '⬇️ Download PDF Copy';
+      btn.disabled = false;
+    }, 3000);
+  });
+}
+
 // ── SUBMIT ────────────────────────────────────────────────
 async function submitAgreement() {
   const first        = document.getElementById('c-first').value.trim();
@@ -468,9 +613,22 @@ async function submitAgreement() {
 
   try {
     await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+
+    // Store data for PDF generation
+    pdfData = {
+      order, first, last, email, phone, venue, venueAddress,
+      timeFmt, duration, notes, sigImage, today,
+      products: order.products
+    };
+    buildPDFContent(pdfData);
+
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
     window.scrollTo({top:0, behavior:'smooth'});
+
+    // Auto-trigger PDF download after short delay
+    setTimeout(() => downloadPDF(), 800);
+
   } catch(err) {
     console.error('EmailJS error:', err);
     btn.disabled = false;
