@@ -795,7 +795,7 @@ function addPreset(index) {
   if (existing) {
     existing.qty += 1;
   } else {
-    products.push({ id: Date.now(), name: p.name, qty: 1, price: p.price });
+    products.push({ id: Date.now(), name: p.name, qty: 1, price: p.price, details: p.details });
   }
   // Flash badge
   const badge = document.getElementById('badge-' + index);
@@ -933,7 +933,7 @@ function generateLink() {
 
   const orderData = {
     refNum,
-    products: products.map(p => ({name:p.name, qty:p.qty, price:p.price})),
+    products: products.map(p => ({name:p.name, qty:p.qty, price:p.price, details:p.details||[]})),
     delivery, deliveryNotes, total, deposit, balance
   };
 
