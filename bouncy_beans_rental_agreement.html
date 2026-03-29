@@ -471,9 +471,66 @@
     .main { padding: 0; max-width: 100%; }
     body { background: #fff; }
   }
+
+  /* ── PASSWORD SCREEN ─────────────────────── */
+  .lock-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, var(--pink) 0%, #FF8FA3 40%, var(--yellow) 100%);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+  }
+  .lock-box {
+    background: #fff;
+    border-radius: 24px;
+    padding: 36px 32px;
+    width: min(360px, 90vw);
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .lock-emoji { font-size: 3rem; margin-bottom: 12px; }
+  .lock-title { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: var(--navy); margin-bottom: 4px; }
+  .lock-sub { font-size: 0.85rem; color: var(--muted); font-weight: 600; margin-bottom: 24px; }
+  .lock-input {
+    width: 100%; padding: 13px 16px;
+    border: 2px solid var(--border); border-radius: 12px;
+    font-family: 'Nunito', sans-serif; font-size: 1rem;
+    text-align: center; letter-spacing: 2px;
+    outline: none; margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .lock-input:focus { border-color: var(--pink); }
+  .lock-input.wrong { border-color: #e74c3c; animation: shake 0.4s; }
+  .lock-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, var(--pink), #FF8FA3);
+    color: #fff; border: none; border-radius: 12px;
+    font-family: 'Nunito', sans-serif; font-weight: 800;
+    font-size: 1rem; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255,107,138,0.35);
+    transition: all 0.18s;
+  }
+  .lock-btn:hover { transform: translateY(-1px); }
+  .lock-error { font-size: 0.82rem; color: #e74c3c; font-weight: 700; margin-top: 8px; display: none; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
 </style>
 </head>
 <body>
+
+<!-- LOCK SCREEN -->
+<div class="lock-screen" id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-emoji">🔐</div>
+    <div class="lock-title">Bouncy Beans</div>
+    <div class="lock-sub">Admin Access Only</div>
+    <input class="lock-input" type="password" id="lock-input" placeholder="Enter password" onkeydown="if(event.key==='Enter') unlock()">
+    <button class="lock-btn" onclick="unlock()">Unlock →</button>
+    <div class="lock-error" id="lock-error">❌ Incorrect password. Try again.</div>
+  </div>
+</div>
 
 <div class="header">
   <div class="header-logo">
@@ -898,8 +955,7 @@ function generateLink() {
 
   // Generate link
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(orderData))));
-  const base = window.location.href.replace(/[^\/]*$/, '');
-  const link = base + 'client.html?order=' + encoded;
+  const link = 'https://sign.bouncybeanswpg.ca/client.html?order=' + encoded;
   document.getElementById('client-link').value = link;
 
   goTo(1);
@@ -936,9 +992,29 @@ function resetAll() {
   goTo(0);
 }
 
+// ── PASSWORD ──────────────────────────────────────────────
+function unlock() {
+  const input = document.getElementById('lock-input');
+  const error = document.getElementById('lock-error');
+  if (input.value === 'Leah2021!') {
+    sessionStorage.setItem('bb_auth', '1');
+    document.getElementById('lock-screen').style.display = 'none';
+    input.value = '';
+  } else {
+    input.classList.add('wrong');
+    error.style.display = 'block';
+    setTimeout(() => input.classList.remove('wrong'), 400);
+    input.value = '';
+    input.focus();
+  }
+}
+
 // ── INIT ─────────────────────────────────────────────────
+if (sessionStorage.getItem('bb_auth') === '1') {
+  document.getElementById('lock-screen').style.display = 'none';
+}
 renderCatalog();
-addProduct();
+renderProducts();
 document.getElementById('deliveryFee').addEventListener('input', renderSummary);
 </script>
 </body>
