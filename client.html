@@ -279,10 +279,10 @@ function renderOrder() {
 
   if (order.delivery > 0) {
     itemsRows += `<tr>
-      <td>Delivery / Setup Fee${order.deliveryNotes ? ' — '+order.deliveryNotes : ''}</td>
-      <td style="text-align:center">1</td>
-      <td style="text-align:right">$${order.delivery.toFixed(2)}</td>
-      <td style="text-align:right">$${order.delivery.toFixed(2)}</td>
+      <td>Delivery Fee${order.deliveryNotes ? ' — '+order.deliveryNotes : ''}</td>
+      <td style="text-align:center; vertical-align:top;">1</td>
+      <td style="text-align:right; vertical-align:top;">$${order.delivery.toFixed(2)}</td>
+      <td style="text-align:right; vertical-align:top;">$${order.delivery.toFixed(2)}</td>
     </tr>`;
   }
 
@@ -459,7 +459,7 @@ function buildPDFContent(data) {
       <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right; vertical-align:top;">$${(p.qty*p.price).toFixed(2)}</td>
     </tr>`).join('') + (data.order.delivery > 0 ? `
     <tr>
-      <td style="padding:7px 10px; border-bottom:1px solid #eee;">Delivery / Setup Fee${data.order.deliveryNotes?' — '+data.order.deliveryNotes:''}</td>
+      <td style="padding:7px 10px; border-bottom:1px solid #eee;">Delivery Fee${data.order.deliveryNotes?' — '+data.order.deliveryNotes:''}</td>
       <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:center;">1</td>
       <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${data.order.delivery.toFixed(2)}</td>
       <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${data.order.delivery.toFixed(2)}</td>
