@@ -268,10 +268,13 @@ function renderOrder() {
 
   let itemsRows = order.products.map(p => `
     <tr>
-      <td>${p.name}</td>
-      <td style="text-align:center">${p.qty}</td>
-      <td style="text-align:right">$${parseFloat(p.price).toFixed(2)}</td>
-      <td style="text-align:right">$${(p.qty*p.price).toFixed(2)}</td>
+      <td>
+        <div style="font-weight:700;">${p.name}</div>
+        ${p.details && p.details.length ? `<div style="font-size:0.78rem; color:var(--muted); margin-top:4px; line-height:1.6;">${p.details.map(d => '• '+d).join('<br>')}</div>` : ''}
+      </td>
+      <td style="text-align:center; vertical-align:top;">${p.qty}</td>
+      <td style="text-align:right; vertical-align:top;">$${parseFloat(p.price).toFixed(2)}</td>
+      <td style="text-align:right; vertical-align:top;">$${(p.qty*p.price).toFixed(2)}</td>
     </tr>`).join('');
 
   if (order.delivery > 0) {
