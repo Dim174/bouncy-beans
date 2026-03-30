@@ -138,101 +138,108 @@
   <!-- MAIN FORM (hidden once signed) -->
   <div id="main-content">
 
-    <!-- ORDER SUMMARY -->
-    <div class="card">
-      <div class="card-title">📋 Your Rental Summary</div>
-      <div id="order-summary">
-        <div style="color:var(--muted); font-size:0.9rem; text-align:center; padding:12px;">Loading your order...</div>
-      </div>
-    </div>
+  <!-- WELCOME BANNER -->
+  <div style="background:linear-gradient(135deg,#FFF0F4,#FFF8E6); border:2px solid #FFD166; border-radius:var(--radius); padding:22px 24px; margin-bottom:18px; text-align:center;">
+    <div style="font-size:2rem; margin-bottom:8px;">🎈</div>
+    <div style="font-family:'Fredoka One',cursive; font-size:1.4rem; color:var(--pink); margin-bottom:6px;">Thank You for Choosing Bouncy Beans!</div>
+    <div style="font-size:0.88rem; color:var(--muted); font-weight:600; line-height:1.6;">We're so excited to be part of your special day! 🎉<br>Please fill in your details, read the agreement and sign to confirm your booking.</div>
+  </div>
 
-    <!-- FULL AGREEMENT -->
-    <div class="card">
-      <div class="card-title">📄 Please Read Your Agreement</div>
-      <div style="background:#FFF8E6; border-left:4px solid var(--yellow); border-radius:8px; padding:10px 14px; font-size:0.83rem; font-weight:700; color:#7A5C00; margin-bottom:16px;">
-        ⚠️ Please read the full agreement carefully before signing below.
-      </div>
-      <div class="agreement-doc" id="agreement-display"></div>
+  <!-- ORDER SUMMARY -->
+  <div class="card">
+    <div class="card-title">📋 Your Rental Summary</div>
+    <div id="order-summary">
+      <div style="color:var(--muted); font-size:0.9rem; text-align:center; padding:12px;">Loading your order...</div>
     </div>
+  </div>
 
-    <!-- CLIENT FORM -->
-    <div class="card client-form">
-      <div class="card-title">👤 Your Contact Information</div>
-      <div class="field-row">
-        <div class="field">
-          <label>First Name *</label>
-          <input type="text" id="c-first" placeholder="Jane">
-        </div>
-        <div class="field">
-          <label>Last Name *</label>
-          <input type="text" id="c-last" placeholder="Smith">
-        </div>
+  <!-- CLIENT FORM -->
+  <div class="card client-form">
+    <div class="card-title">👤 Your Contact Information</div>
+    <div class="field-row">
+      <div class="field">
+        <label>First Name *</label>
+        <input type="text" id="c-first" placeholder="Jane">
       </div>
       <div class="field">
-        <label>Email Address * (your copy will be sent here)</label>
-        <input type="email" id="c-email" placeholder="jane@email.com">
-      </div>
-      <div class="field">
-        <label>Phone Number *</label>
-        <input type="tel" id="c-phone" placeholder="+1 (555) 000-0000">
+        <label>Last Name *</label>
+        <input type="text" id="c-last" placeholder="Smith">
       </div>
     </div>
+    <div class="field">
+      <label>Email Address * (your copy will be sent here)</label>
+      <input type="email" id="c-email" placeholder="jane@email.com">
+    </div>
+    <div class="field">
+      <label>Phone Number *</label>
+      <input type="tel" id="c-phone" placeholder="+1 (555) 000-0000">
+    </div>
+  </div>
 
-    <!-- EVENT DETAILS (filled by client) -->
-    <div class="card client-form">
-      <div class="card-title">📍 Event Location & Timing</div>
+  <!-- EVENT DETAILS (filled by client) -->
+  <div class="card client-form">
+    <div class="card-title">📍 Event Location & Timing</div>
+    <div class="field">
+      <label>Venue / Location Name *</label>
+      <input type="text" id="c-venue" placeholder="e.g. Community Hall, My Home, St. Mary's Church">
+    </div>
+    <div class="field">
+      <label>Venue Address *</label>
+      <input type="text" id="c-venue-address" placeholder="123 Main St, City, Province, Postal Code">
+    </div>
+    <div class="field-row">
       <div class="field">
-        <label>Venue / Location Name *</label>
-        <input type="text" id="c-venue" placeholder="e.g. Community Hall, My Home, St. Mary's Church">
+        <label>Setup Time *</label>
+        <input type="time" id="c-setup-time">
       </div>
       <div class="field">
-        <label>Venue Address *</label>
-        <input type="text" id="c-venue-address" placeholder="123 Main St, City, Province, Postal Code">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Setup Time *</label>
-          <input type="time" id="c-setup-time">
-        </div>
-        <div class="field">
-          <label>Rental Duration *</label>
-          <select id="c-duration" style="width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-family:'Nunito',sans-serif; font-size:0.93rem; color:var(--text); background:var(--soft-white); outline:none;">
-            <option value="">— Select —</option>
-            <option>1 Hour</option>
-            <option>2 Hours</option>
-            <option>3 Hours</option>
-            <option>4 Hours</option>
-          </select>
-        </div>
-      </div>
-      <div class="field">
-        <label>Special Notes / Instructions</label>
-        <textarea id="c-notes" rows="3" placeholder="Any special requests, access notes, etc."></textarea>
+        <label>Rental Duration *</label>
+        <select id="c-duration" style="width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-family:'Nunito',sans-serif; font-size:0.93rem; color:var(--text); background:var(--soft-white); outline:none;">
+          <option value="">— Select —</option>
+          <option>1 Hour</option>
+          <option>2 Hours</option>
+          <option>3 Hours</option>
+          <option>4 Hours</option>
+        </select>
       </div>
     </div>
+    <div class="field">
+      <label>Special Notes / Instructions</label>
+      <textarea id="c-notes" rows="3" placeholder="Any special requests, access notes, etc."></textarea>
+    </div>
+  </div>
 
-    <!-- SIGNATURE -->
-    <div class="card sig-section">
-      <div class="card-title">✍️ Your Signature</div>
-      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:12px;">Sign below using your finger or mouse. By signing you confirm you have read and agree to all terms.</p>
-      <div class="sig-canvas-wrap">
-        <canvas id="sig-canvas"></canvas>
-        <div class="sig-canvas-label" id="sig-label">Sign here</div>
-      </div>
-      <button class="sig-clear-btn" onclick="clearSig()">✕ Clear Signature</button>
+  <!-- FULL AGREEMENT -->
+  <div class="card">
+    <div class="card-title">📄 Please Read Your Agreement</div>
+    <div style="background:#FFF8E6; border-left:4px solid var(--yellow); border-radius:8px; padding:10px 14px; font-size:0.83rem; font-weight:700; color:#7A5C00; margin-bottom:16px;">
+      ⚠️ Please read the full agreement carefully before signing below.
     </div>
+    <div class="agreement-doc" id="agreement-display"></div>
+  </div>
 
-    <!-- AGREE & SUBMIT -->
-    <div class="card">
-      <div class="checkbox-row">
-        <input type="checkbox" id="agree-check">
-        <label for="agree-check">I have read and fully agree to the Bouncy Beans Soft Play Rental Agreement and all terms and conditions stated above.</label>
-      </div>
-      <div class="error-msg" id="error-msg">⚠️ Please fill all required fields, sign the agreement, and tick the checkbox.</div>
-      <button class="btn-submit" id="submit-btn" onclick="submitAgreement()">
-        ✅ Sign &amp; Submit Agreement
-      </button>
+  <!-- SIGNATURE -->
+  <div class="card sig-section">
+    <div class="card-title">✍️ Your Signature</div>
+    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:12px;">Sign below using your finger or mouse. By signing you confirm you have read and agree to all terms.</p>
+    <div class="sig-canvas-wrap">
+      <canvas id="sig-canvas"></canvas>
+      <div class="sig-canvas-label" id="sig-label">Sign here</div>
     </div>
+    <button class="sig-clear-btn" onclick="clearSig()">✕ Clear Signature</button>
+  </div>
+
+  <!-- AGREE & SUBMIT -->
+  <div class="card">
+    <div class="checkbox-row">
+      <input type="checkbox" id="agree-check">
+      <label for="agree-check">I have read and fully agree to the Bouncy Beans Soft Play Rental Agreement and all terms and conditions stated above.</label>
+    </div>
+    <div class="error-msg" id="error-msg">⚠️ Please fill all required fields, sign the agreement, and tick the checkbox.</div>
+    <button class="btn-submit" id="submit-btn" onclick="submitAgreement()">
+      ✅ Sign &amp; Submit Agreement
+    </button>
+  </div>
 
   </div><!-- /main-content -->
 </div>
@@ -262,10 +269,6 @@ function renderOrder() {
     return;
   }
 
-  const eventFmt = order.eventDate
-    ? new Date(order.eventDate+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
-    : '—';
-
   let itemsRows = order.products.map(p => `
     <tr>
       <td>
@@ -289,8 +292,7 @@ function renderOrder() {
   document.getElementById('order-summary').innerHTML = `
     <div class="info-grid" style="margin-bottom:14px;">
       <div class="info-item"><strong>Ref:</strong> ${order.refNum}</div>
-      <div class="info-item"><strong>Event Date:</strong> ${eventFmt}</div>
-      <div class="info-item" style="grid-column:1/-1; color:var(--muted); font-size:0.8rem;">📍 Setup time, duration &amp; venue — please fill in below</div>
+      <div class="info-item" style="color:var(--muted); font-size:0.8rem;">📍 Please fill in your event details below</div>
     </div>
     <table class="items-table">
       <thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Total</th></tr></thead>
@@ -319,70 +321,82 @@ function renderOrder() {
 function renderAgreement() {
   const today = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
   const refNum = order ? order.refNum : '—';
-  document.getElementById('agreement-display').innerHTML = `
-    <h2>🎈 Bouncy Beans Soft Play</h2>
-    <div class="doc-sub">Rental Agreement &amp; Terms • Ref: ${refNum} • Issued: ${today}</div>
-    <div style="text-align:center; font-size:0.82rem; color:var(--muted); margin-bottom:18px;">
-      This Rental Agreement ("Agreement") is entered into on this day between:<br>
-      <strong>Bouncy Beans Soft Play Rental ("Lessor")</strong> and the Renter named above.
-    </div>
 
-    <h3>1. Reservation and Deposit</h3>
-    <div class="terms-text">
-      <p>A $150 deposit is required to secure the event date and time. This deposit also serves as a damage deposit and will be refunded to the Renter after the event once the equipment has been inspected and confirmed to be in good condition.</p>
-      <p>The deposit is non-refundable.</p>
-      <p>The remaining rental balance is due no later than the day of the event before setup begins.</p>
-    </div>
+  function getClientName() {
+    const first = document.getElementById('c-first').value.trim();
+    const last  = document.getElementById('c-last').value.trim();
+    return (first || last) ? `${first} ${last}`.trim() : '________________________';
+  }
 
-    <h3>2. Rental Equipment</h3>
-    <div class="terms-text">
-      <p>The Renter acknowledges receipt of equipment in good condition and agrees to return it in the same condition.</p>
-    </div>
+  function buildAgreementHTML() {
+    const clientName = getClientName();
+    document.getElementById('agreement-display').innerHTML = `
+      <h2>🎈 Bouncy Beans Soft Play</h2>
+      <div class="doc-sub">Rental Agreement &amp; Terms • Ref: ${refNum} • Issued: ${today}</div>
+      <div style="text-align:center; font-size:0.82rem; color:var(--muted); margin-bottom:18px; line-height:1.8;">
+        This Rental Agreement ("Agreement") is entered into on this day between:<br>
+        <strong>Bouncy Beans Soft Play Rental ("Lessor")</strong><br>and<br>
+        <strong style="color:var(--navy); font-size:0.95rem;">${clientName} ("Renter")</strong>
+      </div>
 
-    <h3>3. Bouncy House Safety Rules</h3>
-    <div class="terms-text">
-      <p>• Maximum weight limit: No more than 160 kg (for the small bounce) and 250 kg (for the big bounce) inside the bouncy castle at one time.</p>
-      <p>• No shoes inside the bouncy castle.</p>
-      <p>• No food, drinks, gum, or candy allowed inside the bouncy castle.</p>
-      <p>• No sharp objects, including keys, jewelry, pens, etc.</p>
-      <p>• No coloring materials, including markers, crayons, or face paint, inside or near the castle.</p>
-      <p>• No jumping, climbing, or hanging on the walls of the bouncy castle.</p>
-      <p>• Children must be supervised by a responsible adult at all times.</p>
-      <p>• Equipment must be kept away from water, open flames, or extreme weather.</p>
-    </div>
+      <h3>1. Reservation and Deposit</h3>
+      <div class="terms-text">
+        <p>A $150 deposit is required to secure the event date and time. This deposit also serves as a damage deposit and will be refunded to the Renter after the event once the equipment has been inspected and confirmed to be in good condition.</p>
+        <p>The deposit is non-refundable.</p>
+        <p>The remaining rental balance is due no later than the day of the event before setup begins.</p>
+      </div>
+      <h3>2. Rental Equipment</h3>
+      <div class="terms-text">
+        <p>The Renter acknowledges receipt of equipment in good condition and agrees to return it in the same condition.</p>
+      </div>
+      <h3>3. Bouncy House Safety Rules</h3>
+      <div class="terms-text">
+        <p>• Maximum weight limit: No more than 160 kg (for the small bounce) and 250 kg (for the big bounce) inside the bouncy castle at one time.</p>
+        <p>• No shoes inside the bouncy castle.</p>
+        <p>• No food, drinks, gum, or candy allowed inside the bouncy castle.</p>
+        <p>• No sharp objects, including keys, jewelry, pens, etc.</p>
+        <p>• No coloring materials, including markers, crayons, or face paint, inside or near the castle.</p>
+        <p>• No jumping, climbing, or hanging on the walls of the bouncy castle.</p>
+        <p>• Children must be supervised by a responsible adult at all times.</p>
+        <p>• Equipment must be kept away from water, open flames, or extreme weather.</p>
+      </div>
+      <h3>4. Responsibilities of the Renter</h3>
+      <div class="terms-text">
+        <p>• Equipment must be used under adult supervision at all times.</p>
+        <p>• Equipment is intended for indoor use only.</p>
+        <p>• No food, drinks, sharp objects, or shoes are permitted in the play area. Socks must be worn in the play area.</p>
+        <p>• The Renter is responsible for any damage, loss, or excessive dirt to the equipment. Repair or replacement costs may be deducted from the damage deposit.</p>
+      </div>
+      <h3>5. No Animals Policy</h3>
+      <div class="terms-text">
+        <p>Absolutely no animals or pets are permitted in or near the soft play area at any time.</p>
+        <p>Animals can contaminate, soil, or damage the equipment (including chewing, scratching, urination, or hair transfer), which compromises safety and sanitation standards.</p>
+        <p>If any animal comes into contact with the equipment, the Company reserves the right to immediately terminate use, remove the equipment without refund, and charge additional fees for cleaning, repairs, or replacement. The Client will be held fully responsible for any resulting damage.</p>
+      </div>
+      <h3>6. Liability Waiver</h3>
+      <div class="terms-text">
+        <p>The Renter understands and agrees that Bouncy Beans Soft Play Rental is not responsible for any injuries, accidents, or damages resulting from the use of the rental equipment. The Renter assumes all responsibility for the safety of all children and guests using the equipment during the event.</p>
+        <p>The Renter releases and holds harmless Bouncy Beans Soft Play Rental, its owners, and employees from any claims, damages, or liabilities arising from use or misuse of the rental equipment.</p>
+      </div>
+      <h3>7. Setup and Pickup</h3>
+      <div class="terms-text">
+        <p>Setup and takedown will be performed by Bouncy Beans staff.</p>
+        <p>Upon pickup, equipment will be inspected. The $150 deposit will be refunded within 24–48 hours if no damage is found.</p>
+      </div>
+      <h3>8. Agreement</h3>
+      <div class="terms-text">
+        <p>By signing below, both parties acknowledge that they have read, understood, and agree to the terms and conditions stated in this Agreement.</p>
+      </div>
+    `;
+  }
 
-    <h3>4. Responsibilities of the Renter</h3>
-    <div class="terms-text">
-      <p>• Equipment must be used under adult supervision at all times.</p>
-      <p>• Equipment is intended for indoor use only.</p>
-      <p>• No food, drinks, sharp objects, or shoes are permitted in the play area. Socks must be worn in the play area.</p>
-      <p>• The Renter is responsible for any damage, loss, or excessive dirt to the equipment. Repair or replacement costs may be deducted from the damage deposit.</p>
-    </div>
+  buildAgreementHTML();
 
-    <h3>5. No Animals Policy</h3>
-    <div class="terms-text">
-      <p>Absolutely no animals or pets are permitted in or near the soft play area at any time.</p>
-      <p>Animals can contaminate, soil, or damage the equipment (including chewing, scratching, urination, or hair transfer), which compromises safety and sanitation standards.</p>
-      <p>If any animal comes into contact with the equipment, the Company reserves the right to immediately terminate use, remove the equipment without refund, and charge additional fees for cleaning, repairs, or replacement. The Client will be held fully responsible for any resulting damage.</p>
-    </div>
-
-    <h3>6. Liability Waiver</h3>
-    <div class="terms-text">
-      <p>The Renter understands and agrees that Bouncy Beans Soft Play Rental is not responsible for any injuries, accidents, or damages resulting from the use of the rental equipment. The Renter assumes all responsibility for the safety of all children and guests using the equipment during the event.</p>
-      <p>The Renter releases and holds harmless Bouncy Beans Soft Play Rental, its owners, and employees from any claims, damages, or liabilities arising from use or misuse of the rental equipment.</p>
-    </div>
-
-    <h3>7. Setup and Pickup</h3>
-    <div class="terms-text">
-      <p>Setup and takedown will be performed by Bouncy Beans staff.</p>
-      <p>Upon pickup, equipment will be inspected. The $150 deposit will be refunded within 24–48 hours if no damage is found.</p>
-    </div>
-
-    <h3>8. Agreement</h3>
-    <div class="terms-text">
-      <p>By signing below, both parties acknowledge that they have read, understood, and agree to the terms and conditions stated in this Agreement.</p>
-    </div>
-  `;
+  // Live-update renter name as client types
+  ['c-first','c-last'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', buildAgreementHTML);
+  });
 }
 
 // ── SIGNATURE CANVAS ──────────────────────────────────────
