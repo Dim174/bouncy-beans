@@ -448,24 +448,97 @@ function clearSig() {
 // ── GOOGLE DRIVE SAVE ─────────────────────────────────────
 const DRIVE_URL = 'https://script.google.com/macros/s/AKfycbzoGVCiU7lfvzL4vFjhGVnvPzZSqkeIFumFKhWhcnTOotYXmWOPXM5fSuTojkrmg2Yi/exec';
 
-async function saveToDrive(pdfBlob, data) {
+async function saveToDriveHTML(data) {
   try {
-    const reader = new FileReader();
-    reader.readAsDataURL(pdfBlob);
-    reader.onloadend = async () => {
-      const base64 = reader.result.split(',')[1];
-      await fetch(DRIVE_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          refNum:     data.order.refNum,
-          clientName: `${data.first}_${data.last}`,
-          today:      data.today,
-          pdfBase64:  base64
-        })
-      });
-    };
+    const itemsRows = data.order.products.map(p => `
+      <tr>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee;">
+          <div style="font-weight:700;">${p.name}</div>
+          ${p.details && p.details.length ? `<div style="font-size:9px; color:#555; margin-top:3px;">${p.details.map(d=>'• '+d).join('<br>')}</div>` : ''}
+        </td>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:center;">${p.qty}</td>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${parseFloat(p.price).toFixed(2)}</td>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${(p.qty*p.price).toFixed(2)}</td>
+      </tr>`).join('') + (data.order.delivery > 0 ? `
+      <tr>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee;">Delivery Fee${data.order.deliveryNotes?' — '+data.order.deliveryNotes:''}</td>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:center;">1</td>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${data.order.delivery.toFixed(2)}</td>
+        <td style="padding:7px 10px; border-bottom:1px solid #eee; text-align:right;">$${data.order.delivery.toFixed(2)}</td>
+      </tr>` : '');
+
+    const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;font-size:12px;color:#2D2D2D;padding:32px;max-width:700px;margin:0 auto;}
+  h1{color:#F4A0B5;font-size:20px;text-align:center;margin-bottom:4px;}
+  .sub{text-align:center;color:#8B7FB8;font-size:11px;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #F4A0B5;}
+  table{width:100%;border-collapse:collapse;margin-bottom:14px;}
+  th{background:#5B4B8A;color:#fff;padding:7px 10px;text-align:left;font-size:11px;}
+  td{padding:7px 10px;border-bottom:1px solid #eee;font-size:11px;}
+  h3{font-size:11px;font-weight:800;color:#7BC4E0;text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 4px;}
+  p{font-size:10px;color:#444;margin:3px 0;line-height:1.6;}
+  .footer{text-align:center;font-size:10px;color:#8B7FB8;margin-top:16px;padding-top:10px;border-top:1px solid #eee;}
+</style></head><body>
+  <h1>🎈 Bouncy Beans Soft Play</h1>
+  <div class="sub">RENTAL AGREEMENT | Ref: ${data.order.refNum} | Signed: ${data.today}</div>
+  <table style="background:#F8F5FF;"><tr>
+    <td><strong>Client:</strong> ${data.first} ${data.last}</td>
+    <td><strong>Phone:</strong> ${data.phone}</td>
+  </tr><tr>
+    <td><strong>Email:</strong> ${data.email}</td>
+    <td><strong>Notes:</strong> ${data.notes||'None'}</td>
+  </tr></table>
+  <table style="background:#EEF9FF;"><tr>
+    <td><strong>Event Date:</strong> ${data.eventDateFmt}</td>
+    <td><strong>Setup Time:</strong> ${data.timeFmt}</td>
+  </tr><tr>
+    <td><strong>Duration:</strong> ${data.duration}</td>
+    <td><strong>Venue:</strong> ${data.venue}</td>
+  </tr><tr>
+    <td colspan="2"><strong>Address:</strong> ${data.venueAddress}</td>
+  </tr></table>
+  <table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead><tbody>
+    ${itemsRows}
+    <tr style="font-weight:800;border-top:2px solid #5B4B8A;">
+      <td colspan="3" style="text-align:right;color:#F4A0B5;">TOTAL</td>
+      <td style="text-align:right;color:#F4A0B5;">$${data.order.total.toFixed(2)}</td>
+    </tr><tr>
+      <td colspan="3" style="text-align:right;color:#8B7FB8;">Refundable Security Deposit</td>
+      <td style="text-align:right;color:#7ECFB3;font-weight:700;">$${data.order.deposit.toFixed(2)}</td>
+    </tr><tr>
+      <td colspan="3" style="text-align:right;font-weight:800;">Balance Due</td>
+      <td style="text-align:right;font-weight:800;color:#F4A0B5;">$${data.order.balance.toFixed(2)}</td>
+    </tr>
+  </tbody></table>
+  <h3>1. Reservation and Deposit</h3><p>A $150 deposit is required to secure the event. It serves as a security/damage deposit and will be refunded within 24–48 hours after the event once equipment is inspected. Non-refundable upon cancellation.</p>
+  <h3>2. Cancellation Policy</h3><p>All bookings are final. The $150 deposit is non-refundable for any cancellation. No exceptions.</p>
+  <h3>3. Rental Equipment</h3><p>The Renter acknowledges receipt of equipment in good condition and agrees to return it in the same condition.</p>
+  <h3>4. Bouncy House Safety Rules</h3><p>• Max weight 160kg/250kg • No shoes • No food/drinks/gum • No sharp objects • No coloring/face paint • No climbing on walls • Adult supervision required • Keep away from water/flames/extreme weather.</p>
+  <h3>5. Responsibilities of the Renter</h3><p>• Adult supervision at all times • Indoor use only • No food/drinks/sharp objects/shoes — socks required • Renter responsible for damage/loss/excessive dirt.</p>
+  <h3>6. Outdoor Use</h3><p>Outdoor use must be pre-approved. Permitted on flat, dry, clean surfaces only. Not permitted in rain, strong winds, or below 15°C. No refund for weather pack-down.</p>
+  <h3>7. No Animals Policy</h3><p>No animals permitted near equipment. Violation may result in removal without refund and additional charges.</p>
+  <h3>8. Liability Waiver</h3><p>Bouncy Beans Soft Play Rental is not responsible for injuries or damages. Renter assumes full responsibility and releases Bouncy Beans from all claims.</p>
+  <h3>9. Setup and Pickup</h3><p>Setup and takedown by Bouncy Beans staff. Deposit refunded within 24–48 hours if no damage found.</p>
+  <h3>10. Agreement</h3><p>By signing, both parties confirm they have read and agree to all terms.</p>
+  <div style="margin-top:20px;padding-top:14px;border-top:2px solid #eee;">
+    <div style="font-size:10px;font-weight:800;color:#8B7FB8;text-transform:uppercase;margin-bottom:8px;">Client Signature</div>
+    <img src="${data.sigImage}" style="max-width:220px;max-height:80px;display:block;border-bottom:1px solid #5B4B8A;">
+    <div style="font-size:10px;margin-top:6px;color:#555;">${data.first} ${data.last} | ${data.today}</div>
+  </div>
+  <div class="footer">🎈 Bouncy Beans Soft Play | bouncybeanssoftplay@gmail.com | Ref: ${data.order.refNum}</div>
+</body></html>`;
+
+    await fetch(DRIVE_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        refNum:     data.order.refNum,
+        clientName: `${data.first}_${data.last}`,
+        today:      data.today,
+        html:       htmlContent
+      })
+    });
   } catch(err) {
     console.warn('Drive save failed (non-critical):', err);
   }
@@ -612,15 +685,17 @@ function downloadPDF() {
     a.click();
     URL.revokeObjectURL(url);
 
-    // Save to Google Drive
-    saveToDrive(blob, pdfData);
-
     el.style.display = 'none';
     btn.textContent = '✅ Downloaded!';
     setTimeout(() => {
       btn.textContent = '⬇️ Download PDF Copy';
       btn.disabled = false;
     }, 3000);
+  }).catch(() => {
+    // PDF failed (common on mobile) — just hide and reset
+    el.style.display = 'none';
+    btn.textContent = '⬇️ Download PDF Copy';
+    btn.disabled = false;
   });
 }
 
@@ -688,7 +763,11 @@ async function submitAgreement() {
   };
 
   try {
-    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+    // Send one email to both client and business at the same time
+    await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+      ...templateParams,
+      to_email: `${email},${BUSINESS_EMAIL}`,
+    });
 
     // Store data for PDF generation
     pdfData = {
@@ -697,6 +776,9 @@ async function submitAgreement() {
       products: order.products
     };
     buildPDFContent(pdfData);
+
+    // Save to Google Drive directly (independent of PDF, works on mobile)
+    saveToDriveHTML(pdfData);
 
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
