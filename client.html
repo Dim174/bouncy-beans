@@ -253,8 +253,9 @@
 emailjs.init('TiWJWCflzGbpUfzeF');
 
 const BUSINESS_EMAIL = 'bouncybeanssoftplay@gmail.com';
-const SERVICE_ID     = 'service_r130idj';
-const TEMPLATE_ID    = 'template_zyzzxac';
+const SERVICE_ID        = 'service_r130idj';
+const TEMPLATE_CLIENT   = 'template_y956i5i';
+const TEMPLATE_BUSINESS = 'template_y9q2lqn';
 
 // ── LOAD ORDER FROM URL ───────────────────────────────────
 let order = null;
@@ -741,6 +742,14 @@ async function submitAgreement() {
     `${p.name} x${p.qty} — $${(p.qty*p.price).toFixed(2)}`
   ).join('\n') + (order.delivery > 0 ? `\nDelivery Fee — $${order.delivery.toFixed(2)}` : '');
 
+  // Prepare PDF data
+  pdfData = {
+    order, first, last, email, phone, venue, venueAddress,
+    eventDateFmt, timeFmt, duration, notes, sigImage, today,
+    products: order.products
+  };
+  buildPDFContent(pdfData);
+
   const templateParams = {
     ref_num:        order.refNum,
     signed_date:    today,
@@ -763,21 +772,41 @@ async function submitAgreement() {
   };
 
   try {
-    // Send one email to both client and business at the same time
-    await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
-      ...templateParams,
-      to_email: `${email},${BUSINESS_EMAIL}`,
+    // Build PDF blob first for client attachment
+    const el = document.getElementById('pdf-content');
+    el.style.display = 'block';
+
+    const pdfBlob = await html2pdf().set({
+      margin: [10, 10, 10, 10],
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(el).toPdf().output('blob');
+
+    el.style.display = 'none';
+
+    // Convert PDF to base64 for EmailJS attachment
+    const pdfBase64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(pdfBlob);
     });
 
-    // Store data for PDF generation
-    pdfData = {
-      order, first, last, email, phone, venue, venueAddress,
-      eventDateFmt, timeFmt, duration, notes, sigImage, today,
-      products: order.products
-    };
-    buildPDFContent(pdfData);
+    // Send client email with PDF attached
+    await emailjs.send(SERVICE_ID, TEMPLATE_CLIENT, {
+      ...templateParams,
+      to_email:    email,
+      pdf_content: pdfBase64,
+      pdf_name:    `Bouncy-Beans-Agreement-${order.refNum}.pdf`,
+    });
 
-    // Save to Google Drive directly (independent of PDF, works on mobile)
+    // Send business notification email
+    await emailjs.send(SERVICE_ID, TEMPLATE_BUSINESS, {
+      ...templateParams,
+      to_email: BUSINESS_EMAIL,
+    });
+
+    // Save to Google Drive directly (works on all devices)
     saveToDriveHTML(pdfData);
 
     document.getElementById('main-content').style.display = 'none';
