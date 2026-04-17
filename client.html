@@ -675,7 +675,7 @@ function downloadPDF() {
     margin: [10, 10, 10, 10],
     filename: `Bouncy-Beans-Agreement-${pdfData.order.refNum}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   }).from(el).toPdf().output('blob').then(blob => {
     // Download for client
@@ -702,46 +702,130 @@ function downloadPDF() {
 
 // ── SUBMIT ────────────────────────────────────────────────
 async function submitAgreement() {
+  const first        = document.getElementById('c-first').value.trim();
+  const last         = document.getElementById('c-last').value.trim();
+  const email        = document.getElementById('c-email').value.trim();
+  const phone        = document.getElementById('c-phone').value.trim();
+  const eventDate    = document.getElementById('c-event-date').value;
+  const venue        = document.getElementById('c-venue').value.trim();
+  const venueAddress = document.getElementById('c-venue-address').value.trim();
+  const setupTime    = document.getElementById('c-setup-time').value;
+  const duration     = document.getElementById('c-duration').value;
+  const notes        = document.getElementById('c-notes').value.trim();
+  const agreed       = document.getElementById('agree-check').checked;
+  const errBox       = document.getElementById('error-msg');
+
+  if (!first || !last || !email || !phone || !eventDate || !venue || !venueAddress || !setupTime || !duration || !hasSig || !agreed) {
+    errBox.textContent = '⚠️ Please fill all required fields, sign the agreement, and tick the checkbox.';
+    errBox.style.display = 'block';
+    errBox.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  errBox.style.display = 'none';
+
   const btn = document.getElementById('submit-btn');
-  const errBox = document.getElementById('error-message');
-  
   btn.disabled = true;
-  btn.innerHTML = 'Generating PDF...';
+  btn.innerHTML = '<span class="spinner"></span> Sending...';
+
+  const sigImage = canvas.toDataURL('image/png');
+  const today = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+  const eventDateFmt = eventDate
+    ? new Date(eventDate+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+    : '—';
+
+  // Format setup time nicely
+  const [h,m] = setupTime.split(':');
+  const td = new Date(); td.setHours(h,m);
+  const timeFmt = td.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+
+  const itemsList = order.products.map(p =>
+    `${p.name} x${p.qty} — $${(p.qty*p.price).toFixed(2)}`
+  ).join('\n') + (order.delivery > 0 ? `\nDelivery Fee — $${order.delivery.toFixed(2)}` : '');
+
+  // Prepare PDF data
+  pdfData = {
+    order, first, last, email, phone, venue, venueAddress,
+    eventDateFmt, timeFmt, duration, notes, sigImage, today,
+    products: order.products
+  };
+  buildPDFContent(pdfData);
+
+  const templateParams = {
+    ref_num:        order.refNum,
+    signed_date:    today,
+    event_date:     eventDateFmt,
+    setup_time:     timeFmt,
+    duration:       duration,
+    venue:          venue,
+    venue_address:  venueAddress,
+    client_name:    first + ' ' + last,
+    client_email:   email,
+    client_phone:   phone,
+    client_notes:   notes || 'None',
+    items_list:     itemsList,
+    total:          '$' + order.total.toFixed(2),
+    deposit:        '$' + order.deposit.toFixed(2),
+    balance_due:    '$' + order.balance.toFixed(2),
+    signature_img:  sigImage,
+    business_email: BUSINESS_EMAIL,
+    to_email:       email,
+  };
 
   try {
-    // 1. Scroll to the top of the agreement so html2canvas sees everything
-    const el = document.getElementById('agreement-content');
-    window.scrollTo(0, 0);
+    // Build PDF blob first for client attachment
+    const el = document.getElementById('pdf-content');
+    el.style.display = 'block';
 
-    // 2. Wait 500ms to ensure signatures/stamps are fully rendered
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // 3. Generate the PDF with stable settings
     const pdfBlob = await html2pdf().set({
-      margin: 10,
-      image: { type: 'jpeg', quality: 0.8 }, // Slightly lower quality to stay under 50KB
-      html2canvas: { 
-        scale: 1, 
-        useCORS: true,
-        letterRendering: true // Helps with text clarity at low scale
-      },
+      margin: [10, 10, 10, 10],
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(el).output('blob');
+    }).from(el).toPdf().output('blob');
 
-    // 4. Convert to Base64 for EmailJS
-    const pdfBase64 = await new Promise((resolve, reject) => {
+    el.style.display = 'none';
+
+    // Convert PDF to base64 for EmailJS attachment
+    const pdfBase64 = await new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result.split(',')[1];
-        if (base64String && base64String.length > 100) {
-          resolve(base64String);
-        } else {
-          reject("PDF generation resulted in empty data");
-        }
-      };
-      reader.onerror = reject;
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
       reader.readAsDataURL(pdfBlob);
-    });// ── INIT ──────────────────────────────────────────────────
+    });
+
+    // Send client email with PDF attached
+    await emailjs.send(SERVICE_ID, TEMPLATE_CLIENT, {
+      ...templateParams,
+      to_email:    email,
+      pdf_content: pdfBase64,
+      pdf_name:    `Bouncy-Beans-Agreement-${order.refNum}.pdf`,
+    });
+
+    // Send business notification email
+    await emailjs.send(SERVICE_ID, TEMPLATE_BUSINESS, {
+      ...templateParams,
+      to_email: BUSINESS_EMAIL,
+    });
+
+    // Save to Google Drive directly (works on all devices)
+    saveToDriveHTML(pdfData);
+
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+
+    // Auto-trigger PDF download after short delay
+    setTimeout(() => downloadPDF(), 800);
+
+  } catch(err) {
+    console.error('EmailJS error:', err);
+    btn.disabled = false;
+    btn.innerHTML = '✅ Sign &amp; Submit Agreement';
+    errBox.textContent = '⚠️ Failed to send. Please try again or contact Bouncy Beans directly.';
+    errBox.style.display = 'block';
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────
 window.addEventListener('load', () => {
   resizeCanvas();
   renderOrder();
