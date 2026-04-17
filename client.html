@@ -766,37 +766,38 @@ async function submitAgreement() {
     total:          '$' + order.total.toFixed(2),
     deposit:        '$' + order.deposit.toFixed(2),
     balance_due:    '$' + order.balance.toFixed(2),
-    signature_img:  sigImage,
-    business_email: BUSINESS_EMAIL,
-    to_email:       email,
   };
 
   try {
-    // Build PDF blob first for client attachment
+    // Generate PDF blob for attachment
     const el = document.getElementById('pdf-content');
     el.style.display = 'block';
 
-    const pdfBlob = await html2pdf().set({
-      margin: [10, 10, 10, 10],
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(el).toPdf().output('blob');
+    let pdfBase64 = null;
+    try {
+      const pdfBlob = await html2pdf().set({
+        margin: [10, 10, 10, 10],
+        image: { type: 'jpeg', quality: 0.85 },
+        html2canvas: { scale: 1.5, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(el).toPdf().output('blob');
+      el.style.display = 'none';
 
-    el.style.display = 'none';
+      pdfBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(pdfBlob);
+      });
+    } catch(pdfErr) {
+      el.style.display = 'none';
+      console.warn('PDF generation failed, sending without attachment:', pdfErr);
+    }
 
-    // Convert PDF to base64 for EmailJS attachment
-    const pdfBase64 = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]);
-      reader.readAsDataURL(pdfBlob);
-    });
-
-    // Send client email with PDF attached
+    // Send client confirmation email with PDF attached
     await emailjs.send(SERVICE_ID, TEMPLATE_CLIENT, {
       ...templateParams,
       to_email:    email,
-      pdf_content: pdfBase64,
+      pdf_content: pdfBase64 || '',
       pdf_name:    `Bouncy-Beans-Agreement-${order.refNum}.pdf`,
     });
 
