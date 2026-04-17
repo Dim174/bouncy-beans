@@ -702,129 +702,82 @@ function downloadPDF() {
 
 // ── SUBMIT ────────────────────────────────────────────────
 async function submitAgreement() {
-  const first        = document.getElementById('c-first').value.trim();
-  const last         = document.getElementById('c-last').value.trim();
-  const email        = document.getElementById('c-email').value.trim();
-  const phone        = document.getElementById('c-phone').value.trim();
-  const eventDate    = document.getElementById('c-event-date').value;
-  const venue        = document.getElementById('c-venue').value.trim();
-  const venueAddress = document.getElementById('c-venue-address').value.trim();
-  const setupTime    = document.getElementById('c-setup-time').value;
-  const duration     = document.getElementById('c-duration').value;
-  const notes        = document.getElementById('c-notes').value.trim();
-  const agreed       = document.getElementById('agree-check').checked;
-  const errBox       = document.getElementById('error-msg');
-
-  if (!first || !last || !email || !phone || !eventDate || !venue || !venueAddress || !setupTime || !duration || !hasSig || !agreed) {
-    errBox.textContent = '⚠️ Please fill all required fields, sign the agreement, and tick the checkbox.';
-    errBox.style.display = 'block';
-    errBox.scrollIntoView({behavior:'smooth', block:'center'});
-    return;
-  }
+  const btn = document.getElementById('submit-btn');
+  const errBox = document.getElementById('error-message');
+  
+  btn.disabled = true;
+  btn.innerHTML = 'Generating PDF...';
   errBox.style.display = 'none';
 
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Sending...';
-
-  const sigImage = canvas.toDataURL('image/png');
-  const today = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
-  const eventDateFmt = eventDate
-    ? new Date(eventDate+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
-    : '—';
-
-  // Format setup time nicely
-  const [h,m] = setupTime.split(':');
-  const td = new Date(); td.setHours(h,m);
-  const timeFmt = td.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
-
-  const itemsList = order.products.map(p =>
-    `${p.name} x${p.qty} — $${(p.qty*p.price).toFixed(2)}`
-  ).join('\n') + (order.delivery > 0 ? `\nDelivery Fee — $${order.delivery.toFixed(2)}` : '');
-
-  // Prepare PDF data
-  pdfData = {
-    order, first, last, email, phone, venue, venueAddress,
-    eventDateFmt, timeFmt, duration, notes, sigImage, today,
-    products: order.products
-  };
-  buildPDFContent(pdfData);
-
-  const templateParams = {
-    ref_num:        order.refNum,
-    signed_date:    today,
-    event_date:     eventDateFmt,
-    setup_time:     timeFmt,
-    duration:       duration,
-    venue:          venue,
-    venue_address:  venueAddress,
-    client_name:    first + ' ' + last,
-    client_email:   email,
-    client_phone:   phone,
-    client_notes:   notes || 'None',
-    items_list:     itemsList,
-    total:          '$' + order.total.toFixed(2),
-    deposit:        '$' + order.deposit.toFixed(2),
-    balance_due:    '$' + order.balance.toFixed(2),
-    signature_img:  sigImage,
-    business_email: BUSINESS_EMAIL,
-    to_email:       email,
-  };
-
   try {
-    // Build PDF blob first for client attachment
-    const el = document.getElementById('pdf-content');
-    el.style.display = 'block';
+    const el = document.getElementById('agreement-content');
+    
+    // 1. Scroll to top to ensure the capture starts from the beginning
+    window.scrollTo(0, 0);
 
+    // 2. Wait 500ms to ensure signatures and graphics are fully rendered
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // 3. Generate the PDF with scale: 1 to stay under the 50KB EmailJS limit
     const pdfBlob = await html2pdf().set({
-      margin: [10, 10, 10, 10],
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 1, useCORS: true },
+      margin: 10,
+      image: { type: 'jpeg', quality: 0.8 },
+      html2canvas: { 
+        scale: 1, 
+        useCORS: true,
+        letterRendering: true 
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(el).toPdf().output('blob');
+    }).from(el).output('blob');
 
-    el.style.display = 'none';
-
-    // Convert PDF to base64 for EmailJS attachment
-    const pdfBase64 = await new Promise((resolve) => {
+    // 4. Convert to Base64 for the EmailJS attachment
+    const pdfBase64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onloadend = () => {
+        const base = reader.result.split(',')[1];
+        if (base && base.length > 100) resolve(base);
+        else reject("PDF data is empty");
+      };
+      reader.onerror = reject;
       reader.readAsDataURL(pdfBlob);
     });
 
-    // Send client email with PDF attached
-    await emailjs.send(SERVICE_ID, TEMPLATE_CLIENT, {
-      ...templateParams,
-      to_email:    email,
-      pdf_content: pdfBase64,
-      pdf_name:    `Bouncy-Beans-Agreement-${order.refNum}.pdf`,
-    });
+    // 5. Send emails via EmailJS
+    const templateParams = {
+      order_id:    order.refNum,
+      client_name: document.getElementById('client-name').value,
+      client_email: document.getElementById('client-email').value,
+      event_date:  order.eventDate,
+      pdf_name:    `Agreement-${order.refNum}.pdf`,
+      pdf_content: pdfBase64
+    };
 
-    // Send business notification email
-    await emailjs.send(SERVICE_ID, TEMPLATE_BUSINESS, {
-      ...templateParams,
-      to_email: BUSINESS_EMAIL,
-    });
+    // Client Copy
+    await emailjs.send(SERVICE_ID, TEMPLATE_CLIENT, templateParams);
 
-    // Save to Google Drive directly (works on all devices)
-    saveToDriveHTML(pdfData);
+    // Business Copy
+    await emailjs.send(SERVICE_ID, TEMPLATE_BUSINESS, templateParams);
+
+    // 6. Finalize: Save to Drive and show success screen
+    if (typeof saveToDriveHTML === 'function') {
+      saveToDriveHTML(pdfData);
+    }
 
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
-    window.scrollTo({top:0, behavior:'smooth'});
+    window.scrollTo({top: 0, behavior: 'smooth'});
 
-    // Auto-trigger PDF download after short delay
+    // Auto-trigger download for the client's records
     setTimeout(() => downloadPDF(), 800);
 
   } catch(err) {
-    console.error('EmailJS error:', err);
+    console.error('Submission error:', err);
     btn.disabled = false;
-    btn.innerHTML = '✅ Sign &amp; Submit Agreement';
-    errBox.textContent = '⚠️ Failed to send. Please try again or contact Bouncy Beans directly.';
+    btn.innerHTML = '✅ Sign & Submit Agreement';
+    errBox.textContent = '⚠️ Failed to send. Please try again or contact support.';
     errBox.style.display = 'block';
   }
 }
-
 // ── INIT ──────────────────────────────────────────────────
 window.addEventListener('load', () => {
   resizeCanvas();
