@@ -529,9 +529,8 @@ async function saveToDriveHTML(data) {
   <div class="footer">🎈 Bouncy Beans Soft Play | bouncybeanssoftplay@gmail.com | Ref: ${data.order.refNum}</div>
 </body></html>`;
 
-    await fetch(DRIVE_URL, {
+    const response = await fetch(DRIVE_URL, {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         refNum:     data.order.refNum,
@@ -540,8 +539,12 @@ async function saveToDriveHTML(data) {
         html:       htmlContent
       })
     });
+
+    const result = await response.json();
+    return result.pdfUrl || null;
   } catch(err) {
-    console.warn('Drive save failed (non-critical):', err);
+    console.warn('Drive save failed:', err);
+    return null;
   }
 }
 
@@ -769,46 +772,22 @@ async function submitAgreement() {
   };
 
   try {
-    // Generate PDF blob for attachment
-    const el = document.getElementById('pdf-content');
-    el.style.display = 'block';
+    // Save to Google Drive and get PDF link back
+    const pdfLink = await saveToDriveHTML(pdfData);
 
-    let pdfBase64 = null;
-    try {
-      const pdfBlob = await html2pdf().set({
-        margin: [10, 10, 10, 10],
-        image: { type: 'jpeg', quality: 0.85 },
-        html2canvas: { scale: 1.5, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(el).toPdf().output('blob');
-      el.style.display = 'none';
-
-      pdfBase64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result.split(',')[1]);
-        reader.readAsDataURL(pdfBlob);
-      });
-    } catch(pdfErr) {
-      el.style.display = 'none';
-      console.warn('PDF generation failed, sending without attachment:', pdfErr);
-    }
-
-    // Send client confirmation email with PDF attached
+    // Send client confirmation email with PDF download link
     await emailjs.send(SERVICE_ID, TEMPLATE_CLIENT, {
       ...templateParams,
-      to_email:    email,
-      pdf_content: pdfBase64 || '',
-      pdf_name:    `Bouncy-Beans-Agreement-${order.refNum}.pdf`,
+      to_email: email,
+      pdf_link: pdfLink || 'PDF generation in progress, check your Drive folder',
     });
 
     // Send business notification email
     await emailjs.send(SERVICE_ID, TEMPLATE_BUSINESS, {
       ...templateParams,
       to_email: BUSINESS_EMAIL,
+      pdf_link: pdfLink || 'Check Drive folder',
     });
-
-    // Save to Google Drive directly (works on all devices)
-    saveToDriveHTML(pdfData);
 
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
