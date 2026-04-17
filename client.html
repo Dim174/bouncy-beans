@@ -707,78 +707,41 @@ async function submitAgreement() {
   
   btn.disabled = true;
   btn.innerHTML = 'Generating PDF...';
-  errBox.style.display = 'none';
 
   try {
+    // 1. Scroll to the top of the agreement so html2canvas sees everything
     const el = document.getElementById('agreement-content');
-    
-    // 1. Scroll to top to ensure the capture starts from the beginning
     window.scrollTo(0, 0);
 
-    // 2. Wait 500ms to ensure signatures and graphics are fully rendered
+    // 2. Wait 500ms to ensure signatures/stamps are fully rendered
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // 3. Generate the PDF with scale: 1 to stay under the 50KB EmailJS limit
+    // 3. Generate the PDF with stable settings
     const pdfBlob = await html2pdf().set({
       margin: 10,
-      image: { type: 'jpeg', quality: 0.8 },
+      image: { type: 'jpeg', quality: 0.8 }, // Slightly lower quality to stay under 50KB
       html2canvas: { 
         scale: 1, 
         useCORS: true,
-        letterRendering: true 
+        letterRendering: true // Helps with text clarity at low scale
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(el).output('blob');
 
-    // 4. Convert to Base64 for the EmailJS attachment
+    // 4. Convert to Base64 for EmailJS
     const pdfBase64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base = reader.result.split(',')[1];
-        if (base && base.length > 100) resolve(base);
-        else reject("PDF data is empty");
+        const base64String = reader.result.split(',')[1];
+        if (base64String && base64String.length > 100) {
+          resolve(base64String);
+        } else {
+          reject("PDF generation resulted in empty data");
+        }
       };
       reader.onerror = reject;
       reader.readAsDataURL(pdfBlob);
-    });
-
-    // 5. Send emails via EmailJS
-    const templateParams = {
-      order_id:    order.refNum,
-      client_name: document.getElementById('client-name').value,
-      client_email: document.getElementById('client-email').value,
-      event_date:  order.eventDate,
-      pdf_name:    `Agreement-${order.refNum}.pdf`,
-      pdf_content: pdfBase64
-    };
-
-    // Client Copy
-    await emailjs.send(SERVICE_ID, TEMPLATE_CLIENT, templateParams);
-
-    // Business Copy
-    await emailjs.send(SERVICE_ID, TEMPLATE_BUSINESS, templateParams);
-
-    // 6. Finalize: Save to Drive and show success screen
-    if (typeof saveToDriveHTML === 'function') {
-      saveToDriveHTML(pdfData);
-    }
-
-    document.getElementById('main-content').style.display = 'none';
-    document.getElementById('success-screen').style.display = 'block';
-    window.scrollTo({top: 0, behavior: 'smooth'});
-
-    // Auto-trigger download for the client's records
-    setTimeout(() => downloadPDF(), 800);
-
-  } catch(err) {
-    console.error('Submission error:', err);
-    btn.disabled = false;
-    btn.innerHTML = '✅ Sign & Submit Agreement';
-    errBox.textContent = '⚠️ Failed to send. Please try again or contact support.';
-    errBox.style.display = 'block';
-  }
-}
-// ── INIT ──────────────────────────────────────────────────
+    });// ── INIT ──────────────────────────────────────────────────
 window.addEventListener('load', () => {
   resizeCanvas();
   renderOrder();
